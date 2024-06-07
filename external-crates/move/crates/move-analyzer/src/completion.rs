@@ -232,7 +232,7 @@ fn fun_def_info(
     let Some(fdef) = mdef.functions.get(&name) else {
         return None;
     };
-    let def_loc = DefLoc::new(fhash, fdef.start);
+    let def_loc = DefLoc::new(fhash, fdef.name_start);
     symbols.def_info(&def_loc)
 }
 
