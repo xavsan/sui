@@ -2342,7 +2342,9 @@ impl SenderSignedData {
     pub fn has_zklogin_sig(&self) -> bool {
         self.tx_signatures().iter().any(|sig| sig.is_zklogin())
     }
-
+    pub fn has_passkey_sig(&self) -> bool {
+        self.tx_signatures().iter().any(|sig| sig.is_passkey())
+    }
     pub fn has_upgraded_multisig(&self) -> bool {
         self.tx_signatures()
             .iter()
@@ -2376,6 +2378,11 @@ impl SenderSignedData {
         if !config.zklogin_auth() && self.has_zklogin_sig() {
             return Err(SuiError::UnsupportedFeatureError {
                 error: "zklogin is not enabled on this network".to_string(),
+            });
+        }
+        if !config.passkey_auth() && self.has_passkey_sig() {
+            return Err(SuiError::UnsupportedFeatureError {
+                error: "passkey is not enabled on this network".to_string(),
             });
         }
 

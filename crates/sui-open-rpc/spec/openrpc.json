@@ -1331,6 +1331,7 @@
                 "package_digest_hash_module": false,
                 "package_upgrades": true,
                 "prepend_prologue_tx_in_consensus_commit_in_checkpoints": false,
+                "passkey_auth": false,
                 "random_beacon": false,
                 "receive_objects": false,
                 "recompute_has_public_transfer_in_execution": false,
@@ -6492,6 +6493,18 @@
               }
             },
             "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "PasskeyAuthenticator"
+            ],
+            "properties": {
+              "PasskeyAuthenticator": {
+                "$ref": "#/components/schemas/PasskeyAuthenticator"
+              }
+            },
+            "additionalProperties": false
           }
         ]
       },
@@ -7830,6 +7843,36 @@
                 "type": "null"
               }
             ]
+          }
+        }
+      },
+      "PasskeyAuthenticator": {
+        "description": "An passkey authenticator with all the necessary fields.",
+        "type": "object",
+        "required": [
+          "authenticator_data",
+          "client_data_json",
+          "user_signature"
+        ],
+        "properties": {
+          "authenticator_data": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            }
+          },
+          "client_data_json": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            }
+          },
+          "user_signature": {
+            "$ref": "#/components/schemas/Signature"
           }
         }
       },

@@ -146,6 +146,7 @@ const MAX_PROTOCOL_VERSION: u64 = 50;
 //             Enable checkpoint batching in testnet.
 //             Prepose consensus commit prologue in checkpoints.
 //             Set number of leaders per round for Mysticeti commits.
+//             Add support for passkey in devnet.
 
 #[derive(Copy, Clone, Debug, Hash, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ProtocolVersion(u64);
@@ -506,6 +507,10 @@ struct FeatureFlags {
     // Enable Soft Bundle (SIP-19).
     #[serde(skip_serializing_if = "is_false")]
     soft_bundle: bool,
+
+    // Enable passkey auth (SIP-9)
+    #[serde(skip_serializing_if = "is_false")]
+    passkey_auth: bool,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -1444,6 +1449,10 @@ impl ProtocolConfig {
 
     pub fn soft_bundle(&self) -> bool {
         self.feature_flags.soft_bundle
+    }
+
+    pub fn passkey_auth(&self) -> bool {
+        self.feature_flags.passkey_auth
     }
 }
 
@@ -2405,6 +2414,10 @@ impl ProtocolConfig {
 
                     // Set max transaction deferral to 10 consensus rounds.
                     cfg.max_deferral_rounds_for_congestion_control = Some(10);
+
+                    if chain != Chain::Testnet && chain != Chain::Mainnet {
+                        cfg.feature_flags.passkey_auth = true;
+                    }
                 }
                 // Use this template when making changes:
                 //
@@ -2560,6 +2573,10 @@ impl ProtocolConfig {
 
     pub fn set_mysticeti_num_leaders_per_round_for_testing(&mut self, val: Option<usize>) {
         self.feature_flags.mysticeti_num_leaders_per_round = val;
+    }
+    
+    pub fn set_passkey_auth_for_testing(&mut self, val: bool) {
+        self.feature_flags.passkey_auth = val
     }
 }
 
