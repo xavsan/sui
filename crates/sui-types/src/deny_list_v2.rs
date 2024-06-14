@@ -3,7 +3,7 @@
 
 use crate::base_types::{EpochId, SuiAddress};
 use crate::deny_list_v1::{get_deny_list_root_object, DENY_LIST_COIN_TYPE_INDEX, DENY_LIST_MODULE};
-use crate::dynamic_field::get_dynamic_field_from_store;
+use crate::dynamic_field::{get_dynamic_field_from_store, DOFWrapper};
 use crate::id::UID;
 use crate::storage::ObjectStore;
 use crate::{MoveTypeTagTrait, SUI_FRAMEWORK_PACKAGE_ID};
@@ -21,14 +21,13 @@ pub struct Config {
 
 /// Rust representation of the Move type 0x2::config::Setting.
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct Setting<V: Copy> {
-    id: UID,
+struct Setting<V: Clone + fmt::Debug> {
     data: Option<SettingData<V>>,
 }
 
 /// Rust representation of the Move type 0x2::config::SettingData.
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct SettingData<V: Copy> {
+struct SettingData<V: Clone + fmt::Debug> {
     newer_value_epoch: u64,
     newer_value: V,
     older_value_opt: Option<V>,
@@ -80,15 +79,14 @@ pub fn get_per_type_coin_deny_list_v2(
 ) -> Option<Config> {
     let deny_list_root =
         get_deny_list_root_object(object_store).expect("Deny list root object not found");
-    let config: Config = get_dynamic_field_from_store(
-        object_store,
-        deny_list_root.id(),
-        &ConfigKey {
+    let config_key = DOFWrapper {
+        name: ConfigKey {
             per_type_index: DENY_LIST_COIN_TYPE_INDEX,
             per_type_key: coin_type.as_bytes().to_vec(),
         },
-    )
-    .ok()?;
+    };
+    let config: Config =
+        get_dynamic_field_from_store(object_store, deny_list_root.id(), &config_key).ok()?;
     Some(config)
 }
 
@@ -96,21 +94,28 @@ pub fn check_address_denied_by_coin(
     coin_deny_config: &Config,
     address: SuiAddress,
     object_store: &dyn ObjectStore,
-    cur_epoch: EpochId,
+    cur_epoch: Option<EpochId>,
 ) -> bool {
     let address_key = AddressKey(address);
     read_config_setting(object_store, coin_deny_config, address_key, cur_epoch).unwrap_or(false)
 }
 
+/// Read the setting value from the config object in the object store for the given setting name.
+/// If the setting is not found, return None.
+/// If the setting is found, and if cur_epoch is not specified, it means we always want the latest value,
+/// so return the newer value.
+/// If the setting is found, and if cur_epoch is specified, it means we want the value prior to cur_epoch,
+/// so return the older value if the newer_value_epoch is equal to or newer than cur_epoch,
+/// otherwise return the newer value.
 fn read_config_setting<K, V>(
     object_store: &dyn ObjectStore,
     config: &Config,
     setting_name: K,
-    cur_epoch: EpochId,
+    cur_epoch: Option<EpochId>,
 ) -> Option<V>
 where
     K: MoveTypeTagTrait + Serialize + DeserializeOwned + fmt::Debug,
-    V: Copy + Serialize + DeserializeOwned,
+    V: Clone + fmt::Debug + Serialize + DeserializeOwned,
 {
     let setting: Setting<V> = {
         match get_dynamic_field_from_store(object_store, *config.id.object_id(), &setting_name) {
@@ -121,9 +126,13 @@ where
     let Some(setting_data) = setting.data else {
         return None;
     };
-    if setting_data.newer_value_epoch < cur_epoch {
-        Some(setting_data.newer_value)
+    if let Some(cur_epoch) = cur_epoch {
+        if setting_data.newer_value_epoch < cur_epoch {
+            Some(setting_data.newer_value)
+        } else {
+            setting_data.older_value_opt
+        }
     } else {
-        setting_data.older_value_opt
+        Some(setting_data.newer_value)
     }
 }
