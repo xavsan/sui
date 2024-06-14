@@ -11,6 +11,7 @@ use std::sync::Arc;
 use sui_bridge::abi::{EthBridgeEvent, EthSuiBridgeEvents};
 use sui_bridge::types::EthLog;
 use tracing::info;
+use tracing::log::error;
 
 pub async fn process_eth_events(
     mut eth_events_rx: mysten_metrics::metered_channel::Receiver<(EthAddress, u64, Vec<EthLog>)>,
@@ -35,8 +36,6 @@ pub async fn process_eth_events(
                 .unwrap();
             let gas = transaction.gas;
             let tx_hash = log.tx_hash;
-
-            info!("Observed Finalized Eth bridge event: {:#?}", bridge_event);
 
             let transfer: TokenTransfer = match bridge_event {
                 EthBridgeEvent::EthSuiBridgeEvents(bridge_event) => match bridge_event {
@@ -105,7 +104,10 @@ pub async fn process_eth_events(
                     continue;
                 }
             };
-            write(pool, vec![transfer])?;
+
+            if let Err(e) = write(pool, vec![transfer]) {
+                error!("Error writing token transfer to database: {:?}", e);
+            }
         }
     }
     Ok(())

@@ -6,6 +6,7 @@ use crate::models::TokenTransferData as DBTokenTransferData;
 use crate::schema::token_transfer_data;
 use crate::{schema::token_transfer, TokenTransfer};
 use diesel::result::Error;
+use diesel::BoolExpressionMethods;
 use diesel::ExpressionMethods;
 use diesel::OptionalExtension;
 use diesel::QueryDsl;
@@ -47,28 +48,24 @@ pub fn write(pool: &PgPool, token_txns: Vec<TokenTransfer>) -> Result<(), anyhow
     Ok(())
 }
 
-pub fn get_newest_finalized_token_transfer(
+pub fn get_latest_eth_token_transfer(
     pool: &PgPool,
+    finalized: bool,
 ) -> Result<Option<DBTokenTransfer>, Error> {
     use crate::schema::token_transfer::dsl::*;
 
     let connection = &mut pool.get().unwrap();
-    token_transfer
-        .filter(status.ne("DepositedUnfinalized"))
-        .order(block_height.desc())
-        .first::<DBTokenTransfer>(connection)
-        .optional()
-}
-
-pub fn get_newest_unfinalized_token_transfer(
-    pool: &PgPool,
-) -> Result<Option<DBTokenTransfer>, Error> {
-    use crate::schema::token_transfer::dsl::*;
-
-    let connection = &mut pool.get().unwrap();
-    token_transfer
-        .filter(status.eq("DepositedUnfinalized"))
-        .order(block_height.desc())
-        .first::<DBTokenTransfer>(connection)
-        .optional()
+    if (finalized) {
+        token_transfer
+            .filter(data_source.eq("ETH").and(status.eq("Deposited")))
+            .order(block_height.desc())
+            .first::<DBTokenTransfer>(connection)
+            .optional()
+    } else {
+        token_transfer
+            .filter(status.eq("DepositedUnfinalized"))
+            .order(block_height.desc())
+            .first::<DBTokenTransfer>(connection)
+            .optional()
+    }
 }

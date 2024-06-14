@@ -16,8 +16,7 @@ use std::sync::Arc;
 use sui_bridge::{eth_client::EthClient, eth_syncer::EthSyncer};
 use sui_bridge_indexer::latest_eth_syncer::LatestEthSyncer;
 use sui_bridge_indexer::postgres_manager::get_connection_pool;
-use sui_bridge_indexer::postgres_manager::get_newest_finalized_token_transfer;
-use sui_bridge_indexer::postgres_manager::get_newest_unfinalized_token_transfer;
+use sui_bridge_indexer::postgres_manager::get_latest_eth_token_transfer;
 use sui_bridge_indexer::sui_worker::SuiBridgeWorker;
 use sui_bridge_indexer::{config::load_config, metrics::BridgeIndexerMetrics};
 use sui_data_ingestion_core::{
@@ -67,7 +66,63 @@ async fn main() -> Result<()> {
     );
     let indexer_meterics = BridgeIndexerMetrics::new(&registry);
 
-    // start eth client ================================================================================================
+    // start indexing
+    start_processing_eth_events(&config).await?;
+    start_processing_sui_checkpoints(&config, indexer_meterics).await?;
+
+    Ok(())
+}
+
+async fn start_processing_sui_checkpoints(
+    config: &sui_bridge_indexer::config::Config,
+    indexer_meterics: BridgeIndexerMetrics,
+) -> Result<()> {
+    // metrics init
+    let (_exit_sender, exit_receiver) = oneshot::channel();
+    let metrics = DataIngestionMetrics::new(&Registry::new());
+
+    let progress_store = FileProgressStore::new(config.progress_store_file.clone().into());
+    let mut executor = IndexerExecutor::new(progress_store, 1 /* workflow types */, metrics);
+
+    let indexer_metrics_cloned = indexer_meterics.clone();
+
+    let worker_pool = WorkerPool::new(
+        SuiBridgeWorker::new(vec![], config.db_url.clone(), indexer_metrics_cloned),
+        "bridge worker".into(),
+        config.concurrency as usize,
+    );
+    executor.register(worker_pool).await?;
+    executor
+        .run(
+            config.checkpoints_path.clone().into(),
+            Some(config.remote_store_url.clone()),
+            vec![], // optional remote store access options
+            ReaderOptions::default(),
+            exit_receiver,
+        )
+        .await?;
+
+    Ok(())
+}
+
+async fn start_processing_eth_events(config: &sui_bridge_indexer::config::Config) -> Result<()> {
+    let pg_pool = get_connection_pool(config.db_url.clone());
+
+    let newest_unfinalized_block_recorded = match get_latest_eth_token_transfer(&pg_pool, false)? {
+        Some(transfer) => transfer.block_height as u64,
+        None => config.start_block,
+    };
+
+    let newest_finalized_block = match get_latest_eth_token_transfer(&pg_pool, true)? {
+        Some(transfer) => transfer.block_height as u64,
+        None => config.start_block,
+    };
+
+    info!(
+        "Starting from unfinalized block: {}",
+        newest_unfinalized_block_recorded
+    );
+    info!("Starting from finalized block: {}", newest_finalized_block);
 
     let provider = Arc::new(
         ethers::prelude::Provider::<ethers::providers::Http>::try_from(&config.eth_rpc_url)
@@ -89,16 +144,7 @@ async fn main() -> Result<()> {
         .await?,
     );
 
-    let pg_pool = get_connection_pool(config.db_url.clone());
-
     // capture finalized blocks
-
-    let newest_finalized_block = match get_newest_finalized_token_transfer(&pg_pool)? {
-        Some(transfer) => transfer.block_height as u64,
-        None => config.start_block,
-    };
-
-    info!("Starting from finalized block: {}", newest_finalized_block);
 
     let contract_addresses = HashMap::from_iter(vec![(bridge_address, newest_finalized_block)]);
 
@@ -117,27 +163,12 @@ async fn main() -> Result<()> {
 
     // capture unfinalized blocks
 
-    let newest_unfinalized_block_recorded = match get_newest_unfinalized_token_transfer(&pg_pool)? {
-        Some(transfer) => transfer.block_height as u64,
-        None => config.start_block,
-    };
-
-    info!(
-        "Starting from unfinalized block: {}",
-        newest_unfinalized_block_recorded
-    );
-
     let eth_client = Arc::new(
         EthClient::<ethers::providers::Http>::new(
             &config.eth_rpc_url,
             HashSet::from_iter(vec![bridge_address]),
         )
         .await?,
-    );
-
-    info!(
-        "Starting from latest block: {}",
-        newest_unfinalized_block_recorded
     );
 
     let contract_addresses =
@@ -153,33 +184,6 @@ async fn main() -> Result<()> {
         process_eth_events(eth_events_rx, provider.clone(), &pg_pool, false),
         "unfinalized indexer handler"
     );
-
-    // start sui side =================================================================================
-
-    // metrics init
-    let (_exit_sender, exit_receiver) = oneshot::channel();
-    let metrics = DataIngestionMetrics::new(&Registry::new());
-
-    let progress_store = FileProgressStore::new(config.progress_store_file.into());
-    let mut executor = IndexerExecutor::new(progress_store, 1 /* workflow types */, metrics);
-
-    let indexer_metrics_cloned = indexer_meterics.clone();
-
-    let worker_pool = WorkerPool::new(
-        SuiBridgeWorker::new(vec![], config.db_url.clone(), indexer_metrics_cloned),
-        "bridge worker".into(),
-        config.concurrency as usize,
-    );
-    executor.register(worker_pool).await?;
-    executor
-        .run(
-            config.checkpoints_path.into(),
-            Some(config.remote_store_url),
-            vec![], // optional remote store access options
-            ReaderOptions::default(),
-            exit_receiver,
-        )
-        .await?;
 
     Ok(())
 }
