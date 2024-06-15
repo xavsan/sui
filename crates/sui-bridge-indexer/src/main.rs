@@ -59,7 +59,9 @@ async fn main() -> Result<()> {
             .unwrap_or_else(|err| panic!("Failed to parse metric address: {}", err)),
     );
     let registry: Registry = registry_service.default_registry();
+
     mysten_metrics::init_metrics(&registry);
+
     info!(
         "Metrics server started at {}::{}",
         config.metric_url, config.metric_port
@@ -68,6 +70,7 @@ async fn main() -> Result<()> {
 
     // start indexing
     start_processing_eth_events(&config).await?;
+
     start_processing_sui_checkpoints(&config, indexer_meterics).await?;
 
     Ok(())
@@ -174,7 +177,7 @@ async fn start_processing_eth_events(config: &sui_bridge_indexer::config::Config
     let contract_addresses =
         HashMap::from_iter(vec![(bridge_address, newest_unfinalized_block_recorded)]);
 
-    let (_task_handles, eth_events_rx, _) =
+    let (_task_handles, eth_events_rx) =
         LatestEthSyncer::new(eth_client, provider.clone(), contract_addresses.clone())
             .run()
             .await

@@ -26,6 +26,7 @@ pub fn get_connection_pool(database_url: String) -> PgPool {
         .expect("Could not build Postgres DB connection pool")
 }
 
+// TODO: add retry logic
 pub fn write(pool: &PgPool, token_txns: Vec<TokenTransfer>) -> Result<(), anyhow::Error> {
     let (transfers, data): (Vec<DBTokenTransfer>, Vec<Option<DBTokenTransferData>>) = token_txns
         .iter()
@@ -55,7 +56,8 @@ pub fn get_latest_eth_token_transfer(
     use crate::schema::token_transfer::dsl::*;
 
     let connection = &mut pool.get().unwrap();
-    if (finalized) {
+
+    if finalized {
         token_transfer
             .filter(data_source.eq("ETH").and(status.eq("Deposited")))
             .order(block_height.desc())

@@ -15,7 +15,6 @@ use sui_bridge::error::BridgeResult;
 use sui_bridge::eth_client::EthClient;
 use sui_bridge::retry_with_max_elapsed_time;
 use sui_bridge::types::EthLog;
-use tokio::sync::watch;
 use tokio::task::JoinHandle;
 use tokio::time::{self, Duration};
 use tracing::error;
@@ -55,7 +54,6 @@ where
     ) -> BridgeResult<(
         Vec<JoinHandle<()>>,
         mysten_metrics::metered_channel::Receiver<(EthAddress, u64, Vec<EthLog>)>,
-        watch::Receiver<u64>,
     )> {
         let (eth_evnets_tx, eth_events_rx) = mysten_metrics::metered_channel::channel(
             ETH_EVENTS_CHANNEL_SIZE,
@@ -64,79 +62,47 @@ where
                 .channel_inflight
                 .with_label_values(&["eth_events_queue"]),
         );
-        let latest_block = self.provider.get_block_number().await?.as_u64();
-        let (latest_block_tx, latest_block_rx) = watch::channel(latest_block);
+
         let mut task_handles = vec![];
-        task_handles.push(spawn_logged_monitored_task!(Self::run_block_refresh_task(
-            latest_block_tx,
-            self.provider
-        )));
         for (contract_address, start_block) in self.contract_addresses {
             let eth_events_tx_clone = eth_evnets_tx.clone();
-            let latest_block_rx_clone = latest_block_rx.clone();
+            // let latest_block_rx_clone = latest_block_rx.clone();
             let eth_client_clone = self.eth_client.clone();
+            let provider_clone = self.provider.clone();
             task_handles.push(spawn_logged_monitored_task!(
                 Self::run_event_listening_task(
                     contract_address,
                     start_block,
-                    latest_block_rx_clone,
+                    provider_clone,
                     eth_events_tx_clone,
                     eth_client_clone,
                 )
             ));
         }
-        Ok((task_handles, eth_events_rx, latest_block_rx))
+        Ok((task_handles, eth_events_rx))
     }
 
-    async fn run_block_refresh_task(
-        latest_block_sender: watch::Sender<u64>,
+    async fn run_event_listening_task(
+        contract_address: EthAddress,
+        mut start_block: u64,
         provider: Arc<Provider<Http>>,
+        events_sender: mysten_metrics::metered_channel::Sender<(EthAddress, u64, Vec<EthLog>)>,
+        eth_client: Arc<EthClient<P>>,
     ) {
-        tracing::info!("Starting block refresh task.");
-        let mut latest_block_number = 0;
-        let mut interval = time::interval(BLOCK_QUERY_INTERVAL);
-        interval.set_missed_tick_behavior(time::MissedTickBehavior::Skip);
+        tracing::info!(contract_address=?contract_address, "Starting eth events listening task from block {start_block}");
         loop {
+            let mut interval = time::interval(BLOCK_QUERY_INTERVAL);
             interval.tick().await;
-            let Ok(Ok(new_value)) = retry_with_max_elapsed_time!(
+            let Ok(Ok(new_block)) = retry_with_max_elapsed_time!(
                 provider.get_block_number(),
                 time::Duration::from_secs(10)
             ) else {
                 error!("Failed to get latest block from eth client after retry");
                 continue;
             };
-            tracing::debug!("Last block: {}", new_value);
 
-            // TODO add a metrics for the last block
+            let new_block: u64 = new_block.as_u64();
 
-            if new_value.as_u64() > latest_block_number {
-                latest_block_sender
-                    .send(new_value.as_u64())
-                    .expect("last_block channel receiver is closed");
-                tracing::info!("Observed new eth block: {}", new_value);
-                latest_block_number = new_value.as_u64();
-            }
-        }
-    }
-
-    async fn run_event_listening_task(
-        contract_address: EthAddress,
-        mut start_block: u64,
-        mut latest_block_receiver: watch::Receiver<u64>,
-        events_sender: mysten_metrics::metered_channel::Sender<(EthAddress, u64, Vec<EthLog>)>,
-        eth_client: Arc<EthClient<P>>,
-    ) {
-        tracing::info!(contract_address=?contract_address, "Starting eth events listening task from block {start_block}");
-        let mut more_blocks = false;
-        loop {
-            // If no more known blocks, wait for the next block.
-            if !more_blocks {
-                latest_block_receiver
-                    .changed()
-                    .await
-                    .expect("last_block channel sender is closed");
-            }
-            let new_block = *latest_block_receiver.borrow();
             if new_block < start_block {
                 tracing::info!(
                     contract_address=?contract_address,
@@ -146,10 +112,10 @@ where
                 );
                 continue;
             }
+
             // Each query does at most ETH_LOG_QUERY_MAX_BLOCK_RANGE blocks.
             let end_block =
                 std::cmp::min(start_block + ETH_LOG_QUERY_MAX_BLOCK_RANGE - 1, new_block);
-            more_blocks = end_block < new_block;
             let Ok(Ok(events)) = retry_with_max_elapsed_time!(
                 eth_client.get_events_in_range(contract_address, start_block, end_block),
                 Duration::from_secs(30)

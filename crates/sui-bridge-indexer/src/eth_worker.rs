@@ -3,7 +3,6 @@
 
 use crate::postgres_manager::{write, PgPool};
 use crate::{BridgeDataSource, TokenTransfer, TokenTransferData, TokenTransferStatus};
-use anyhow::Result;
 use ethers::providers::Provider;
 use ethers::providers::{Http, Middleware};
 use ethers::types::Address as EthAddress;
@@ -18,7 +17,7 @@ pub async fn process_eth_events(
     provider: Arc<Provider<Http>>,
     pool: &PgPool,
     finalized: bool,
-) -> Result<()> {
+) {
     while let Some((_, _, logs)) = eth_events_rx.recv().await {
         for log in logs.iter() {
             let eth_bridge_event = EthBridgeEvent::try_from_eth_log(log);
@@ -73,7 +72,7 @@ pub async fn process_eth_events(
                     }
                     EthSuiBridgeEvents::TokensClaimedFilter(bridge_event) => {
                         // Only write unfinalized claims
-                        if (finalized) {
+                        if finalized {
                             continue;
                         }
                         info!("Observed Unfinalized Eth Claim");
@@ -110,5 +109,6 @@ pub async fn process_eth_events(
             }
         }
     }
-    Ok(())
+
+    panic!("Eth event stream ended unexpectedly");
 }
