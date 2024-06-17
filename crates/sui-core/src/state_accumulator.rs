@@ -629,6 +629,10 @@ impl StateAccumulatorV2 {
         checkpoint_acc: Option<Accumulator>,
     ) -> SuiResult {
         let _scope = monitored_scope("AccumulateRunningRoot");
+        tracing::info!(
+            "accumulating running root for checkpoint {}",
+            checkpoint_seq_num
+        );
 
         let mut running_root = if checkpoint_seq_num == 0 {
             // we're at genesis and need to start from scratch

@@ -22,6 +22,7 @@ mod test {
     use sui_config::node::AuthorityOverloadConfig;
     use sui_config::{AUTHORITIES_DB_NAME, SUI_KEYSTORE_FILENAME};
     use sui_core::authority::authority_store_tables::AuthorityPerpetualTables;
+    use sui_core::authority::epoch_start_configuration::EpochFlag;
     use sui_core::authority::framework_injection;
     use sui_core::authority::AuthorityState;
     use sui_core::checkpoints::{CheckpointStore, CheckpointWatermark};
@@ -292,6 +293,30 @@ mod test {
         sui_protocol_config::ProtocolConfig::poison_get_for_min_version();
 
         register_fail_point_if("select-random-cache", || true);
+
+        let mut initial_flags_nodes = Arc::new(Mutex::new(HashSet::new()));
+        let initial_
+
+        register_fail_point_arg("initial_epoch_flags", move || {
+            dbg!("1");
+            // only alter flags on each node once
+            let current_node = sui_simulator::current_simnode_id();
+            dbg!("1");
+            if !initial_flags_nodes.lock().unwrap().insert(current_node) {
+                dbg!("1");
+                return None;
+            }
+
+            dbg!("1");
+            // only override flags half the time
+            if rand::random::<f64>() > 0.5 {
+                dbg!("1");
+                None
+            } else {
+                dbg!("1");
+                Some(Vec::<EpochFlag>::new())
+            }
+        });
 
         let test_cluster = Arc::new(
             init_test_cluster_builder(4, 1000)
