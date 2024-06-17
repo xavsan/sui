@@ -18,13 +18,12 @@ use sui_bridge::{
     eth_client::EthClient,
     eth_syncer::EthSyncer,
 };
+use sui_bridge_indexer::postgres_writer::PgProgressStore;
 use sui_bridge_indexer::{
     config::load_config, metrics::BridgeIndexerMetrics, postgres_writer::get_connection_pool,
     worker::process_eth_transaction, worker::BridgeWorker,
 };
-use sui_data_ingestion_core::{
-    DataIngestionMetrics, FileProgressStore, IndexerExecutor, ReaderOptions, WorkerPool,
-};
+use sui_data_ingestion_core::{DataIngestionMetrics, IndexerExecutor, ReaderOptions, WorkerPool};
 use tokio::sync::oneshot;
 use tracing::info;
 
@@ -111,20 +110,21 @@ async fn main() -> Result<()> {
         .expect("Failed to start eth syncer");
 
     let pg_pool = get_connection_pool(config.db_url.clone());
+    let pg_pool_clone = pg_pool.clone();
 
     let indexer_metrics_cloned = indexer_meterics.clone();
     let _task_handle = spawn_logged_monitored_task!(
         process_eth_transaction(
             eth_events_rx,
             provider.clone(),
-            pg_pool,
+            pg_pool_clone,
             indexer_metrics_cloned
         ),
         "indexer handler"
     );
 
     // start sui side
-    let progress_store = FileProgressStore::new(config.progress_store_file.into());
+    let progress_store = PgProgressStore::new(pg_pool, config.bridge_genesis_checkpoint);
     let mut executor = IndexerExecutor::new(progress_store, 1 /* workflow types */, metrics);
     let worker_pool = WorkerPool::new(
         BridgeWorker::new(vec![], config.db_url.clone(), indexer_meterics.clone()),
