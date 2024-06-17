@@ -158,6 +158,7 @@ async fn start_processing_eth_events(config: &sui_bridge_indexer::config::Config
 
     let pool_clone = pg_pool.clone();
     let provider_clone = provider.clone();
+    let pg_pool_clone = pg_pool.clone();
 
     let _finalized_task_handle = spawn_logged_monitored_task!(
         process_eth_events(eth_events_rx, provider_clone, &pool_clone, true),
