@@ -14,6 +14,7 @@ use sui_bridge::events::{
 };
 use sui_data_ingestion_core::Worker;
 use sui_types::event::Event;
+use sui_types::messages_checkpoint::CheckpointSequenceNumber;
 use sui_types::{
     base_types::ObjectID,
     effects::TransactionEffectsAPI,
@@ -189,5 +190,16 @@ impl Worker for SuiBridgeWorker {
             })?;
 
         write(&self.pg_pool, bridge_data)
+    }
+
+    async fn save_progress(
+        &self,
+        sequence_number: CheckpointSequenceNumber,
+    ) -> Option<CheckpointSequenceNumber> {
+        if sequence_number % 1000 == 0 {
+            Some(sequence_number)
+        } else {
+            None
+        }
     }
 }
