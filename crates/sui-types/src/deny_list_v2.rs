@@ -2,10 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::base_types::{EpochId, SuiAddress};
-use crate::deny_list_v1::{get_deny_list_root_object, DENY_LIST_COIN_TYPE_INDEX, DENY_LIST_MODULE};
+use crate::deny_list_v1::{
+    get_deny_list_root_object, input_object_coin_types_for_denylist_check,
+    DENY_LIST_COIN_TYPE_INDEX, DENY_LIST_MODULE,
+};
 use crate::dynamic_field::{get_dynamic_field_from_store, DOFWrapper};
+use crate::error::{UserInputError, UserInputResult};
 use crate::id::UID;
 use crate::storage::ObjectStore;
+use crate::transaction::{CheckedInputObjects, ReceivingObjects};
 use crate::{MoveTypeTagTrait, SUI_FRAMEWORK_PACKAGE_ID};
 use move_core_types::ident_str;
 use move_core_types::language_storage::{StructTag, TypeTag};
@@ -73,8 +78,27 @@ impl MoveTypeTagTrait for AddressKey {
     }
 }
 
+pub fn check_coin_deny_list_v2_during_signing(
+    address: SuiAddress,
+    input_objects: &CheckedInputObjects,
+    receiving_objects: &ReceivingObjects,
+    object_store: &dyn ObjectStore,
+) -> UserInputResult {
+    let coin_types = input_object_coin_types_for_denylist_check(input_objects, receiving_objects);
+    for coin_type in coin_types {
+        // TODO: Check global pause flag.
+        let Some(deny_list) = get_per_type_coin_deny_list_v2(&coin_type, object_store) else {
+            return Ok(());
+        };
+        if check_address_denied_by_coin(&deny_list, address, object_store, None) {
+            return Err(UserInputError::AddressDeniedForCoin { address, coin_type });
+        }
+    }
+    Ok(())
+}
+
 pub fn get_per_type_coin_deny_list_v2(
-    coin_type: String,
+    coin_type: &String,
     object_store: &dyn ObjectStore,
 ) -> Option<Config> {
     let deny_list_root =

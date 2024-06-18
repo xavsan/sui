@@ -170,7 +170,7 @@ async fn test_regulated_coin_v2_types() {
         .await
         .unwrap();
     let coin_deny_config = get_per_type_coin_deny_list_v2(
-        regulated_coin_type.to_canonical_string(false),
+        &regulated_coin_type.to_canonical_string(false),
         &env.authority.get_object_store(),
     )
     .unwrap();
