@@ -212,10 +212,14 @@ export class ParallelTransactionExecutor {
 					this.#sourceCoins = new Map();
 				}
 
-				this.#sourceCoins.set(gasCoin.id, null);
+				this.#sourceCoins.set(gasCoin.id, {
+					objectId: gasCoin.id,
+					version: gasCoin.version,
+					digest: gasCoin.digest,
+				});
 			}
 
-			this.#updateCache(async () => {
+			await this.#updateCache(async () => {
 				await Promise.all([
 					this.#cache.cache.deleteObjects([...usedObjects]),
 					this.#waitForLastDigest(),
