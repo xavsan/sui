@@ -1,8 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::schema::{token_transfer, token_transfer_data};
+use crate::schema::{latest_block, token_transfer, token_transfer_data};
 use diesel::{Identifiable, Insertable, Queryable, Selectable};
+
+#[derive(Queryable, Selectable, Insertable, Identifiable, Debug)]
+#[diesel(table_name = latest_block, primary_key(task_name))]
+pub struct LatestBlock {
+    pub task_name: String,
+    pub block_number: i64,
+}
 
 #[derive(Queryable, Selectable, Insertable, Identifiable, Debug)]
 #[diesel(table_name = token_transfer, primary_key(chain_id, nonce))]
