@@ -2574,7 +2574,7 @@ impl ProtocolConfig {
     pub fn set_mysticeti_num_leaders_per_round_for_testing(&mut self, val: Option<usize>) {
         self.feature_flags.mysticeti_num_leaders_per_round = val;
     }
-    
+
     pub fn set_passkey_auth_for_testing(&mut self, val: bool) {
         self.feature_flags.passkey_auth = val
     }

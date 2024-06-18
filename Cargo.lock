@@ -586,7 +586,7 @@ dependencies = [
  "arrow-data",
  "arrow-schema",
  "chrono",
- "half",
+ "half 2.3.1",
  "num",
 ]
 
@@ -601,7 +601,7 @@ dependencies = [
  "arrow-data",
  "arrow-schema",
  "chrono",
- "half",
+ "half 2.3.1",
  "hashbrown 0.14.1",
  "num",
 ]
@@ -613,7 +613,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "69615b061701bcdffbc62756bc7e85c827d5290b472b580c972ebbbf690f5aa4"
 dependencies = [
  "bytes",
- "half",
+ "half 2.3.1",
  "num",
 ]
 
@@ -630,7 +630,7 @@ dependencies = [
  "arrow-select",
  "base64 0.21.2",
  "chrono",
- "half",
+ "half 2.3.1",
  "lexical-core",
  "num",
 ]
@@ -662,7 +662,7 @@ checksum = "67d644b91a162f3ad3135ce1184d0a31c28b816a581e08f29e8e9277a574c64e"
 dependencies = [
  "arrow-buffer",
  "arrow-schema",
- "half",
+ "half 2.3.1",
  "num",
 ]
 
@@ -692,7 +692,7 @@ dependencies = [
  "arrow-data",
  "arrow-schema",
  "chrono",
- "half",
+ "half 2.3.1",
  "indexmap 2.1.0",
  "lexical-core",
  "num",
@@ -711,7 +711,7 @@ dependencies = [
  "arrow-data",
  "arrow-schema",
  "arrow-select",
- "half",
+ "half 2.3.1",
  "num",
 ]
 
@@ -726,7 +726,7 @@ dependencies = [
  "arrow-buffer",
  "arrow-data",
  "arrow-schema",
- "half",
+ "half 2.3.1",
  "hashbrown 0.14.1",
 ]
 
@@ -2332,9 +2332,9 @@ dependencies = [
 
 [[package]]
 name = "ciborium"
-version = "0.2.2"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42e69ffd6f0917f5c029256a24d0161db17cea3997d185db0d35926308770f0e"
+checksum = "b0c137568cc60b904a7724001b35ce2630fd00d5d84805fbb608ab89509d788f"
 dependencies = [
  "ciborium-io",
  "ciborium-ll",
@@ -2343,18 +2343,18 @@ dependencies = [
 
 [[package]]
 name = "ciborium-io"
-version = "0.2.2"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05afea1e0a06c9be33d539b876f1ce3692f4afea2cb41f740e7743225ed1c757"
+checksum = "346de753af073cc87b52b2083a506b38ac176a44cfb05497b622e27be899b369"
 
 [[package]]
 name = "ciborium-ll"
-version = "0.2.2"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57663b653d948a338bfb3eeba9bb2fd5fcfaecb9e199e87e1eda4d9e8b240fd9"
+checksum = "213030a2b5a4e0c0892b6652260cf6ccac84827b83a85a534e178e3906c4cf1b"
 dependencies = [
  "ciborium-io",
- "half",
+ "half 1.8.2",
 ]
 
 [[package]]
@@ -2808,9 +2808,9 @@ dependencies = [
 
 [[package]]
 name = "coset"
-version = "0.3.7"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff8aad850c1f86daa47e812913051eb5a26c4d9fb4242a89178bf99b946e4e3c"
+checksum = "c765a4e852cef25c69a48e9fcd60995a7fecabf0134a0021e7181452c4a60f95"
 dependencies = [
  "ciborium",
  "ciborium-io",
@@ -4382,7 +4382,7 @@ dependencies = [
 [[package]]
 name = "fastcrypto"
 version = "0.1.8"
-source = "git+https://github.com/MystenLabs/fastcrypto?rev=634c741c349fcf2f2f8e5c86bfe7ab45e3c59d52#634c741c349fcf2f2f8e5c86bfe7ab45e3c59d52"
+source = "git+https://github.com/MystenLabs/fastcrypto?rev=8435ec2f308cb6c345e2737ae929d170589d9508#8435ec2f308cb6c345e2737ae929d170589d9508"
 dependencies = [
  "aes",
  "aes-gcm",
@@ -4436,7 +4436,7 @@ dependencies = [
 [[package]]
 name = "fastcrypto-derive"
 version = "0.1.3"
-source = "git+https://github.com/MystenLabs/fastcrypto?rev=634c741c349fcf2f2f8e5c86bfe7ab45e3c59d52#634c741c349fcf2f2f8e5c86bfe7ab45e3c59d52"
+source = "git+https://github.com/MystenLabs/fastcrypto?rev=8435ec2f308cb6c345e2737ae929d170589d9508#8435ec2f308cb6c345e2737ae929d170589d9508"
 dependencies = [
  "quote 1.0.35",
  "syn 1.0.107",
@@ -4445,7 +4445,7 @@ dependencies = [
 [[package]]
 name = "fastcrypto-tbls"
 version = "0.1.0"
-source = "git+https://github.com/MystenLabs/fastcrypto?rev=634c741c349fcf2f2f8e5c86bfe7ab45e3c59d52#634c741c349fcf2f2f8e5c86bfe7ab45e3c59d52"
+source = "git+https://github.com/MystenLabs/fastcrypto?rev=8435ec2f308cb6c345e2737ae929d170589d9508#8435ec2f308cb6c345e2737ae929d170589d9508"
 dependencies = [
  "bcs",
  "digest 0.10.7",
@@ -4463,7 +4463,7 @@ dependencies = [
 [[package]]
 name = "fastcrypto-vdf"
 version = "0.1.0"
-source = "git+https://github.com/MystenLabs/fastcrypto?rev=634c741c349fcf2f2f8e5c86bfe7ab45e3c59d52#634c741c349fcf2f2f8e5c86bfe7ab45e3c59d52"
+source = "git+https://github.com/MystenLabs/fastcrypto?rev=8435ec2f308cb6c345e2737ae929d170589d9508#8435ec2f308cb6c345e2737ae929d170589d9508"
 dependencies = [
  "bcs",
  "fastcrypto",
@@ -4481,7 +4481,7 @@ dependencies = [
 [[package]]
 name = "fastcrypto-zkp"
 version = "0.1.3"
-source = "git+https://github.com/MystenLabs/fastcrypto?rev=634c741c349fcf2f2f8e5c86bfe7ab45e3c59d52#634c741c349fcf2f2f8e5c86bfe7ab45e3c59d52"
+source = "git+https://github.com/MystenLabs/fastcrypto?rev=8435ec2f308cb6c345e2737ae929d170589d9508#8435ec2f308cb6c345e2737ae929d170589d9508"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",
@@ -4837,9 +4837,9 @@ checksum = "efd193069b0ddadc69c46389b740bbccdd97203899b48d09c5f7969591d6bae2"
 
 [[package]]
 name = "futures-timer"
-version = "3.0.2"
+version = "3.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e64b03909df88034c26dc1547e8970b91f98bdb65165d6a4e9110d94263dbb2c"
+checksum = "f288b0a4f20f9a56b5d1da57e2227c661b7b16168e2f72365f57b63326e29b24"
 dependencies = [
  "gloo-timers",
  "send_wrapper 0.4.0",
@@ -5138,6 +5138,12 @@ dependencies = [
  "toml_edit 0.15.0",
  "twox-hash",
 ]
+
+[[package]]
+name = "half"
+version = "1.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eabb4a44450da02c90444cf74558da904edde8fb4e9035a9a6a4e15445af0bd7"
 
 [[package]]
 name = "half"
@@ -8850,7 +8856,7 @@ dependencies = [
  "bytes",
  "chrono",
  "flate2",
- "half",
+ "half 2.3.1",
  "hashbrown 0.14.1",
  "lz4_flex",
  "num",
@@ -10011,7 +10017,7 @@ dependencies = [
  "pin-project-lite",
  "signal-hook-registry",
  "socket2 0.5.6",
- "tokio-macros 2.2.0 (git+https://github.com/mystenmark/tokio-madsim-fork.git?rev=e47aafebf98e9c1734a8848a1876d5946c44bdd1)",
+ "tokio-macros 2.2.0",
  "windows-sys 0.48.0",
 ]
 
@@ -14326,12 +14332,14 @@ version = "0.1.0"
 dependencies = [
  "anemo",
  "anyhow",
+ "async-trait",
  "bcs",
  "better_any",
  "bincode",
  "byteorder",
  "chrono",
  "consensus-config",
+ "coset",
  "criterion",
  "derivative",
  "derive_more",
@@ -14364,6 +14372,7 @@ dependencies = [
  "num-traits",
  "num_enum 0.6.1",
  "once_cell",
+ "p256",
  "parking_lot 0.12.1",
  "passkey",
  "prometheus",
@@ -14388,9 +14397,11 @@ dependencies = [
  "sui-sdk 0.0.0",
  "tap",
  "thiserror",
+ "tokio",
  "tonic 0.11.0",
  "tracing",
  "typed-store-error",
+ "url",
 ]
 
 [[package]]
@@ -15050,9 +15061,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.36.0"
+version = "1.38.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61285f6515fa018fb2d1e46eb21223fff441ee8db5d0f1435e8ab4f5cdb80931"
+checksum = "ba4f4a02a7a80d6f274636f0aa95c7e383b912d41fe721a31f29e29698585a4a"
 dependencies = [
  "backtrace",
  "bytes",
@@ -15063,7 +15074,7 @@ dependencies = [
  "pin-project-lite",
  "signal-hook-registry",
  "socket2 0.5.6",
- "tokio-macros 2.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio-macros 2.3.0",
  "tracing",
  "windows-sys 0.48.0",
 ]
@@ -15096,8 +15107,7 @@ dependencies = [
 [[package]]
 name = "tokio-macros"
 version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b8a1e28f2deaa14e508979454cb3a223b10b938b45af148bc0986de36f1923b"
+source = "git+https://github.com/mystenmark/tokio-madsim-fork.git?rev=e47aafebf98e9c1734a8848a1876d5946c44bdd1#e47aafebf98e9c1734a8848a1876d5946c44bdd1"
 dependencies = [
  "proc-macro2 1.0.78",
  "quote 1.0.35",
@@ -15106,8 +15116,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-macros"
-version = "2.2.0"
-source = "git+https://github.com/mystenmark/tokio-madsim-fork.git?rev=e47aafebf98e9c1734a8848a1876d5946c44bdd1#e47aafebf98e9c1734a8848a1876d5946c44bdd1"
+version = "2.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f5ae998a069d4b5aba8ee9dad856af7d520c3699e6159b185c2acd48155d39a"
 dependencies = [
  "proc-macro2 1.0.78",
  "quote 1.0.35",
