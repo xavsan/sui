@@ -9,8 +9,13 @@ import { SerialTransactionExecutor, Transaction } from '../../src/transactions';
 import { setup, TestToolbox } from './utils/setup';
 
 let toolbox: TestToolbox;
+let executor: SerialTransactionExecutor;
 beforeAll(async () => {
 	toolbox = await setup();
+	executor = new SerialTransactionExecutor({
+		client: toolbox.client,
+		signer: toolbox.keypair,
+	});
 
 	vi.spyOn(toolbox.client, 'multiGetObjects');
 	vi.spyOn(toolbox.client, 'getCoins');
@@ -21,15 +26,12 @@ afterAll(() => {
 });
 
 describe('SerialExecutor', () => {
-	beforeEach(() => {
+	beforeEach(async () => {
 		vi.clearAllMocks();
+		await executor.resetCache();
 	});
 
 	it('Executes multiple transactions using the same objects', async () => {
-		const executor = new SerialTransactionExecutor({
-			client: toolbox.client,
-			signer: toolbox.keypair,
-		});
 		const txb = new Transaction();
 		const [coin] = txb.splitCoins(txb.gas, [1]);
 		txb.transferObjects([coin], toolbox.address());
@@ -66,10 +68,6 @@ describe('SerialExecutor', () => {
 	});
 
 	it('Resets cache on errors', async () => {
-		const executor = new SerialTransactionExecutor({
-			client: toolbox.client,
-			signer: toolbox.keypair,
-		});
 		const txb = new Transaction();
 		const [coin] = txb.splitCoins(txb.gas, [1]);
 		txb.transferObjects([coin], toolbox.address());

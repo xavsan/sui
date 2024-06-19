@@ -72,7 +72,7 @@ export class ParallelTransactionExecutor {
 	}
 
 	resetCache() {
-		return this.#cache.reset();
+		return this.#updateCache(() => this.#cache.reset());
 	}
 
 	async executeTransaction(transaction: Transaction) {
