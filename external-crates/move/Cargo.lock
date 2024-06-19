@@ -1737,6 +1737,7 @@ dependencies = [
  "datatest-stable",
  "dunce",
  "hex",
+ "lsp-types",
  "move-binary-format",
  "move-borrow-graph",
  "move-bytecode-source-map",
