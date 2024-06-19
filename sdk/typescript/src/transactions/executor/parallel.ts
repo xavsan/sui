@@ -147,8 +147,8 @@ export class ParallelTransactionExecutor {
 	async #execute(transaction: Transaction, usedObjects: Set<string>) {
 		let gasCoin!: CoinWithBalance;
 		try {
-			await this.#updateCache();
 			const bytes = await this.#buildQueue.runTask(async () => {
+				await this.#updateCache();
 				gasCoin = await this.#getGasCoin();
 				transaction.setGasPayment([
 					{
