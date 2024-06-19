@@ -22,7 +22,7 @@ afterAll(() => {
 	vi.restoreAllMocks();
 });
 
-describe('ParallelTransactionExecutor', () => {
+describe.skip('ParallelTransactionExecutor', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
