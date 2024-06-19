@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["check_address_denied_by_coin","get_per_type_coin_deny_list_v2"],"struct":["Config","DenyCapV2"]};
