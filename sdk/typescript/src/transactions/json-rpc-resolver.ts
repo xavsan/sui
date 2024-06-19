@@ -236,7 +236,7 @@ async function resolveObjectReferences(
 		}
 
 		if (!input.UnresolvedObject.version && !object?.version) {
-			console.log(input);
+			console.log('Object version not found for object', input);
 			throw new Error(`Object version not found for object ${id}`);
 		}
 
