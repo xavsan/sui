@@ -75,6 +75,8 @@ describe('SerialExecutor', () => {
 		const result = await executor.executeTransaction(txb);
 		const effects = bcs.TransactionEffects.fromBase64(result.effects);
 
+		await toolbox.client.waitForTransaction({ digest: result.digest });
+
 		const newCoinId = effects.V2?.changedObjects.find(
 			([_id, { outputState }], index) =>
 				index !== effects.V2.gasObjectIndex && outputState.ObjectWrite,
