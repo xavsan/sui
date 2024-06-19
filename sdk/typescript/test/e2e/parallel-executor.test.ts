@@ -141,7 +141,7 @@ describe('ParallelTransactionExecutor', () => {
 		);
 
 		const txbs = newCoins.flatMap((newCoinId) => {
-			expect(toolbox.client.getCoins).toHaveBeenCalledTimes(1);
+			expect(toolbox.client.getCoins).toHaveBeenCalledTimes(0);
 			const txb2 = new Transaction();
 			txb2.transferObjects([newCoinId], toolbox.address());
 			const txb3 = new Transaction();
