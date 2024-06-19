@@ -50,6 +50,7 @@ export class ParallelTransactionExecutor {
 	#executeQueue: ParallelQueue;
 	#lastDigest: string | null = null;
 	#cacheLock: Promise<void> | null = null;
+	#pendingTransactions = 0;
 
 	constructor(options: ParallelTransactionExecutorOptions) {
 		this.#signer = options.signer;
@@ -150,6 +151,7 @@ export class ParallelTransactionExecutor {
 			const bytes = await this.#buildQueue.runTask(async () => {
 				await this.#updateCache();
 				gasCoin = await this.#getGasCoin();
+				this.#pendingTransactions++;
 				transaction.setGasPayment([
 					{
 						objectId: gasCoin.id,
@@ -232,6 +234,7 @@ export class ParallelTransactionExecutor {
 					this.#objectIdQueues.delete(objectId);
 				}
 			});
+			this.#pendingTransactions--;
 		}
 	}
 
@@ -258,7 +261,7 @@ export class ParallelTransactionExecutor {
 	}
 
 	async #getGasCoin() {
-		if (this.#coinPool.length === 0 && this.#executeQueue.activeTasks <= this.#maxPoolSize) {
+		if (this.#coinPool.length === 0 && this.#pendingTransactions <= this.#maxPoolSize) {
 			await this.#refillCoinPool();
 		}
 
@@ -273,7 +276,7 @@ export class ParallelTransactionExecutor {
 	async #refillCoinPool() {
 		const batchSize = Math.min(
 			this.#coinBatchSize,
-			this.#maxPoolSize - (this.#coinPool.length + this.#executeQueue.activeTasks) + 1,
+			this.#maxPoolSize - (this.#coinPool.length + this.#pendingTransactions) + 1,
 		);
 
 		if (batchSize === 0) {
